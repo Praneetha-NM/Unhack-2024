@@ -7,13 +7,23 @@ result_lock=threading.Lock()
 machine_status={}
 thread_lock=threading.Lock()
 usage=[]
+machine_count={}
 
-def machine_execution(machine,processing_time,result,process,threadd,wafer,wafer_id):
+def machine_execution(machine,processing_time,result,process,threadd,wafer,wafer_id,machines,step,param):
     with threading.Lock():
+        machine_count[machine]=machine_count.get(machine,0)+1
+        count=machine_count.get(machine,0)
+        n = machines[machine]["n"]
+        if count%n==n-1:
+            print("Hi")
+            param[machine][str("P"+str(wafer_id))]+=machines[machine]["fluctuation"]
+            if param[machine][str("P"+str(wafer_id))]<machines[machine]["parameters"][str("P"+str(wafer_id))][0] or param[machine][str("P"+str(wafer_id))]>machines[machine]["parameters"][str("P"+str(wafer_id))][1]:
+                machine_status[machine]+=machines[machine]["cooldown_time"]
+                param[machine][str("P"+str(wafer_id))]=machines[machine]["initial-parameters"][str("P"+wafer_id)]
+            
         start_time=max(machine_status.get(machine,0),threadd[str(wafer["type"]+"-"+str(wafer_id))])
         end_time=start_time+processing_time
     machine_status[machine]=end_time
-    print(machine_status[machine])
     resultt={"wafer_id":str(wafer["type"]+"-"+str(wafer_id)),
                    "step":process,
                    "machine":machine,
@@ -23,7 +33,7 @@ def machine_execution(machine,processing_time,result,process,threadd,wafer,wafer
         result["schedule"].append(resultt)
     return machine_status[machine]
 
-def step(wafer,wafer_id,steps,machines_for_step,result,free_machines,threadd):
+def step(wafer,wafer_id,steps,machines_for_step,result,free_machines,threadd,machines,param):
     stepp=list(wafer["processing_times"].keys())
     while stepp:
         for step in steps :
@@ -38,7 +48,7 @@ def step(wafer,wafer_id,steps,machines_for_step,result,free_machines,threadd):
                 free_machines.remove(machine)
                 usage.append(step["id"])
                 free_machines
-                prev_time=machine_execution(machine,processing_time,result,step["id"],threadd,wafer,wafer_id)
+                prev_time=machine_execution(machine,processing_time,result,step["id"],threadd,wafer,wafer_id,machines,step,param)
                 threadd[str(wafer["type"]+"-"+str(wafer_id))]+=prev_time+processing_time
                 time.sleep(1)
                 usage.remove(step["id"])
@@ -47,7 +57,7 @@ def step(wafer,wafer_id,steps,machines_for_step,result,free_machines,threadd):
             stepp.remove(step["id"])
         
 if __name__ == "__main__":
-    with open(r"KLA-Inputs\Milestone1.json") as input:
+    with open(r"KLA-Inputs\Milestone3a.json") as input:
         json_file=json.load(input)
     steps=json_file["steps"]
     machines=json_file["machines"] 
@@ -75,20 +85,19 @@ if __name__ == "__main__":
     for wafer in wafers:
         waferr[wafer["type"]]=wafer["processing_times"]
     free_machines=[machine["machine_id"] for machine in machines]
-    print(free_machines)
     threadd={}
+    mach_dct = {machine["machine_id"]: machine for machine in machines}
+    print(initial_param)
     for wafer in wafers:
         for i in range(wafer["quantity"]): 
             threadd[str(wafer["type"]+"-"+str(i+1))]=0
-            print(threadd)
-            t=threading.Thread(target=step, args=(wafer,i+1,steps,machines_for_step,result,free_machines,threadd))
+            t=threading.Thread(target=step, args=(wafer,i+1,steps,machines_for_step,result,free_machines,threadd,mach_dct,initial_param))
             t.start()
             thread.append(t)
     for t in thread:
         t.join()
-    print(result)
     json_object = json.dumps(result, indent=4)
-    with open("Milestone1.json", "w") as outfile:
+    with open("Milestone3a.json", "w") as outfile:
         outfile.write(json_object)
 
 

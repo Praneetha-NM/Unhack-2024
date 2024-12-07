@@ -7,7 +7,7 @@ result_lock=threading.Lock()
 machine_status={}
 thread_lock=threading.Lock()
 usage=[]
-
+machine_count={}
 def machine_execution(machine,processing_time,result,process,threadd,wafer,wafer_id):
     with threading.Lock():
         start_time=max(machine_status.get(machine,0),threadd[str(wafer["type"]+"-"+str(wafer_id))])
@@ -47,7 +47,7 @@ def step(wafer,wafer_id,steps,machines_for_step,result,free_machines,threadd):
             stepp.remove(step["id"])
         
 if __name__ == "__main__":
-    with open(r"KLA-Inputs\Milestone1.json") as input:
+    with open(r"KLA-Inputs\Milestone2b.json") as input:
         json_file=json.load(input)
     steps=json_file["steps"]
     machines=json_file["machines"] 
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         t.join()
     print(result)
     json_object = json.dumps(result, indent=4)
-    with open("Milestone1.json", "w") as outfile:
+    with open("Milestone2b.json", "w") as outfile:
         outfile.write(json_object)
 
 

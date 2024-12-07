@@ -16,12 +16,12 @@ def machine_execution(machine,processing_time,result,process,threadd,wafer,wafer
         n = machines[machine]["n"]
         if count%n==n-1:
             print("Hi")
-            param[machine][str("P"+str(wafer_id))]+=machines[machine]["fluctuation"]
-            if param[machine][str("P"+str(wafer_id))]<machines[machine]["parameters"][str("P"+str(wafer_id))][0] or param[machine][str("P"+str(wafer_id))]>machines[machine]["parameters"][str("P"+str(wafer_id))][1]:
+            param[machine][str("P"+str(step["id"][1]))]+=machines[machine]["fluctuation"][str("P"+str(wafer_id))]
+            if param[machine][str("P"+str(step["id"][1]))]<step["parameters"][str("P"+str(step["id"][1]))][0] and param[machine][str("P"+str(step["id"][1]))]>step["parameters"][str("P"+str(step["id"][1]))][1]:
                 machine_status[machine]+=machines[machine]["cooldown_time"]
-                param[machine][str("P"+str(wafer_id))]=machines[machine]["initial-parameters"][str("P"+wafer_id)]
+                param[machine][str("P"+str(step["id"][1]))]=machines[machine]["initial-parameters"][str("P"+str(step["id"][1]))]
             
-        start_time=max(machine_status.get(machine,0),threadd[str(wafer["type"]+"-"+str(wafer_id))])
+        start_time=max(machine_status.get(machine,0),threadd[str(wafer["type"]+"-"+str(step["id"][1]))])
         end_time=start_time+processing_time
     machine_status[machine]=end_time
     resultt={"wafer_id":str(wafer["type"]+"-"+str(wafer_id)),
